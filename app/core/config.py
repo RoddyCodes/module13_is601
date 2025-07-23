@@ -6,7 +6,11 @@ from typing import Optional, List
 class Settings(BaseSettings):
     # Database settings (keeping your existing default)
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/fastapi_db"
-    
+
+    #use in docker 
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/fastapi_db"
+
+
     # JWT Settings
     JWT_SECRET_KEY: str = "your-super-secret-key-change-this-in-production"
     JWT_REFRESH_SECRET_KEY: str = "your-refresh-secret-key-change-this-in-production"
