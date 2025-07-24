@@ -5,6 +5,7 @@ from uuid import UUID
 import pydantic_core
 from sqlalchemy.exc import IntegrityError
 from app.models.user import User
+from datetime import timedelta
 
 def test_password_hashing(db_session, fake_user_data):
     """Test password hashing and verification functionality"""
@@ -194,3 +195,36 @@ def test_missing_password_registration(db_session):
     # Adjust the expected error message
     with pytest.raises(ValueError, match="Password must be at least 6 characters long"):
         User.register(db_session, test_data)
+
+#added more tests for user authentication and token handling
+import pytest
+from uuid import uuid4
+from app.auth import jwt
+from app.schemas.token import TokenType
+
+def test_get_password_hash_and_verify():
+    password = "SuperSecret123!"
+    hashed = jwt.get_password_hash(password)
+    assert hashed != password
+    assert jwt.verify_password(password, hashed)
+    assert not jwt.verify_password("WrongPassword", hashed)
+
+
+@pytest.mark.asyncio
+async def test_decode_token_invalid_type():
+    user_id = str(uuid4())
+    token = jwt.create_token(user_id, TokenType.ACCESS)
+    # Try to decode as a refresh token (should fail)
+    with pytest.raises(Exception):
+        await jwt.decode_token(token, TokenType.REFRESH)
+
+def test_create_token_expiry():
+    user_id = str(uuid4())
+    # Create a token that expires immediately
+    token = jwt.create_token(user_id, TokenType.ACCESS, expires_delta=timedelta(seconds=0))
+    import asyncio
+    import time
+    time.sleep(1)
+    with pytest.raises(Exception):
+        asyncio.run(jwt.decode_token(token, TokenType.ACCESS))
+
